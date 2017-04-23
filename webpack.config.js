@@ -12,5 +12,11 @@ module.exports = {
             // all files with a '.ts' or '.tsx' extension will be handled by 'ts-loader'
             { test: /\.tsx?$/, loader: "ts-loader" }
         ]
+    },
+    externals: {
+        // require("jquery") is external and available
+        //  on the global var jQuery
+        "three": "THREE",
+        "physijs": "Physijs"
     }
 }

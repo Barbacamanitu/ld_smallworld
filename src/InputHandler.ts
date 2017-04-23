@@ -1,12 +1,19 @@
 import { Game } from './Game';
 import * as THREE from "three";
 
+interface KeyhandlerMap {
+    [key: string]: {func: VoidFunction, canFire: Boolean};
+}
+
+
 export class InputHandler {
     pressedKeys: any;
     mousePos: THREE.Vector2;
     game: Game;
     mouseLocked: Boolean;
     private mouseDelta: THREE.Vector2;
+    handlers: KeyhandlerMap;
+    
 
     constructor(game: Game){
         this.mouseDelta = new THREE.Vector2();
@@ -14,6 +21,7 @@ export class InputHandler {
         this.pressedKeys = {};
         this.game = game;
         this.mouseLocked = false;
+        this.handlers = {};
         this.lockPointer();
         this.setupEventHandlers();
     }
@@ -22,12 +30,20 @@ export class InputHandler {
         window.onkeydown= (e:KeyboardEvent) => {
              if (e && e.code){
                 this.pressedKeys[e.code] = true;
+                if (this.handlers[e.code]&& this.handlers[e.code].canFire && this.handlers[e.code].func){
+                    this.handlers[e.code].func();
+                    this.handlers[e.code].canFire = false;
+                }
              }
         }
 
         window.onkeyup= (e:KeyboardEvent) => {
              if (e && e.code && this.pressedKeys[e.code]){
                 delete this.pressedKeys[e.code];
+
+                if (this.handlers[e.code]&& !this.handlers[e.code].canFire){
+                    this.handlers[e.code].canFire = true;
+                }
              }
         }
 

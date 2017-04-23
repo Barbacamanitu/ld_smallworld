@@ -1,80 +1,119 @@
+
 import { Game } from './Game';
 import * as THREE from "three";
 
-export class Player extends THREE.Object3D {
+export class Player {
+    //Readonly
+
+
     camera: THREE.PerspectiveCamera;
     game: Game;
     speed: number;
     mouseSensitivity: THREE.Vector2;
+    
+    coords: THREE.Vector2;
+
     mesh: THREE.Mesh;
+    head: THREE.Mesh;
     boom: THREE.Object3D;
+    body: Physijs.CapsuleMesh;
+
     constructor(game: Game){
-        super();
+              
 
-        this.mouseSensitivity = new THREE.Vector2(50,50);
-
-        
+        //Setup defaults
+        this.mouseSensitivity = new THREE.Vector2(50,50);        
         this.game = game;
-        this.game.scene.add(this);
-        this.speed = 100;
-
-
-        var playerGeo = new THREE.CubeGeometry(2,10,2);
-        var playerMat = new THREE.MeshLambertMaterial({color: "#ff00cc"});
-
-        var headg = new THREE.CubeGeometry(3,3,3);
-        var headm = new THREE.MeshLambertMaterial({color: "#cc00ff"});
-
-        this.mesh = new THREE.Mesh(playerGeo,playerMat);
-        var head = new THREE.Mesh(headg,headm);
+       
+        this.speed = 20;
+        this.coords = new THREE.Vector2();
         
-        this.mesh.position.setY(5);
-        this.mesh.add(head);
-        head.position.setY(10);
+        this.setupMeshes();
+        this.setupCamera();
 
-        //Sets position of feet
-        this.position.setY(this.game.world.radius);
 
-        this.camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 10000 );
-        this.camera.rotation.order = "YXZ";
-
-        this.boom = new THREE.Object3D();
-        this.boom.position.setY(10);
-
-        this.camera.position.setZ(50);
-        this.camera.position.setY(10);
-        this.boom.add(this.camera);
+        /*his.position.setY(this.game.world.radius);
         this.add(this.mesh);
         this.add(this.boom);
+        this.game.scene.add(this);       */
+        
 
     }
 
-    update(delta: number) : void {
+
+    setupBody():void{
+        this.body = new Physijs.CapsuleMesh(new THREE.CylinderGeometry(2,2,3),Physijs.createMaterial(new THREE.MeshBasicMaterial(),1,1));
+        this.body.position = new THREE.Vector3(0,this.game.world.radius + 50,0);
+        this.body.__dirtyPosition= true;
+    }
+    setupMeshes():void {
+        var playerMat = new THREE.MeshLambertMaterial({color: "#FFA1AC"});
+        //Geometries
+        var playerGeo = new THREE.CubeGeometry(.2,3,.2);
+       
+        var headGeo = new THREE.SphereGeometry(.5);
+     
+        
+
+        //Meshes
+        this.mesh = new THREE.Mesh(playerGeo,playerMat);
+        this.head = new THREE.Mesh(headGeo,playerMat);
+        this.mesh.position.setY(1.5);
+        this.head.position.setY(2);
+        this.mesh.add(this.head);
+    }
+
+    setupCamera():void {
+        this.camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 10000 );
+        this.camera.rotation.order = "YXZ";
+        this.boom = new THREE.Object3D();
+        this.boom.add(this.camera);
+
+        //Set positions
+        this.boom.position.setY(1.5);
+        this.camera.position.setZ(15);
+        this.camera.position.setY(4);
+    }
+
+    update(delta: number) : void {     
+       
+        var speed = delta * 10 * THREE.Math.DEG2RAD;
         if (this.game.input.isDown("w")){
-            this.walk(1,delta);           
+            
         }
+
+        if (this.game.input.isDown("a")){
+         }
+
+        if (this.game.input.isDown("d")){
+        }
+
+        let yRot = this.mesh.rotation.y;
+        //Sync mesh to body
+        
+        this.body.lookAt(new THREE.Vector3());
+        this.body.__dirtyRotation= true;
+        this.mesh.position = this.body.position;
+
+
 
         let mouseMovement = this.mouseSensitivity.clone().multiply(this.game.input.getMouseDelta()).multiplyScalar(delta * THREE.Math.DEG2RAD);
         if (Math.abs(mouseMovement.x) > 0){
-            this.rotateY(-mouseMovement.x);
+           // this.mesh.rotateY(-mouseMovement.x);
+            //this.boom.rotation.y = this.mesh.rotation.y;
         }
 
         if (Math.abs(mouseMovement.y) > 0){
             this.boom.rotateX(-mouseMovement.y);
         }
 
+      
+      
+
     }
 
-    walk(forward : number , delta:number){
-        var matrix = new THREE.Matrix4();
-        matrix.extractRotation( this.matrix );
-        var direction = new THREE.Vector3(forward,0,0);
-        matrix.multiplyVector3( direction );
-       // this.position.add(direction.multiplyScalar(this.speed * delta));
-       this.game.world.rotateOnAxis(direction,THREE.Math.DEG2RAD * 10 * delta);
-    }
 
-    render() : void {
-        this.game.renderer.render(this.game.scene, this.camera);
-    }
+  
+
+
 }
